@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>H-Stats</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                border: 0;
+                outline: none;
+                font-family: sans-serif;
+            }
+
+            body {
+                background-color: #f649fc;
+            }
+
+            .display {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: #f767fc;
+                padding: 15px 20px 10px 20px;
+                width: 85%;
+                max-width: 450px;
+                border-radius: 15px;
+            }
+
+            .display h1, p, span {
+                color: white;
+            }
+
+            .display h1 {
+                margin: 0 0 10px 0;
+                font-size: 35px;
+                text-align: center;
+            }
+
+            .display p {
+                font-weight: bold;
+                font-size: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="display">
+            <h1>H-STATS</h1>
+            <p>Total: <span id="total_requests_element">loading...</span></p>
+            <p>HRS: <span id="hrs_element">loading...</span></p>
+        </div>
+        <script type="text/javascript">
+            const sleep = async (ms) => new Promise(r => setTimeout(r, ms));
+
+            const getTotalRequests = async () => {
+                const totalRequests = await fetch(
+                    "/total_requests",
+                    {
+                        method: "GET"
+                    }
+                ).then(response => response.json());
+
+                return totalRequests;
+            };
+
+            const main = async () => {
+                let lastTotalRequests = null;
+                
+                while (true) {
+                    try {
+                        const totalRequests = await getTotalRequests();
+                        const total = totalRequests["total_requests"];
+
+                        let hrs = 0;
+
+                        if (lastTotalRequests != null) {
+                            hrs = (total - lastTotalRequests);
+                        }
+                        else {
+                            hrs = "loading...";
+                        };
+
+                        if (hrs < 0) {
+                            hrs = 0;
+                        };
+
+                        lastTotalRequests = total;
+
+                        document.querySelector("#total_requests_element").innerHTML = `${total}`;
+                        document.querySelector("#hrs_element").innerHTML = `${hrs}`;
+                    } catch {
+                        document.querySelector("#total_requests_element").innerHTML = "server offline";
+                        document.querySelector("#hrs_element").innerHTML = "server offline";
+                    }
+
+                    await sleep(1000);
+                }
+            };
+
+            main();
+        </script>
+    </body>
+</html>
